@@ -13,6 +13,7 @@ pub enum Commands {
     Create(PathBuf),
     Switch(PathBuf),
     Run(Target),
+    Delete(PathBuf),
 }
 
 pub fn parse() -> io::Result<Commands> {
@@ -57,6 +58,17 @@ pub fn parse() -> io::Result<Commands> {
                 return Err(io::Error::new(io::ErrorKind::NotFound, "path doestn exist"));
             }
             Ok(Commands::Switch(path))
+        },
+        "-delete" => {
+            let name = &args[1];
+            let path = mother_dir.join(name);
+
+            //TODO preform a cleaning of command bc of malicius intent
+            if !path.exists() {
+                eprintln!("path doesnt exist");
+                return Err(io::Error::new(io::ErrorKind::NotFound, "path doestn exist"));
+            }
+            Ok(Commands::Delete(path))
         },
         _ => {
             eprintln!("unkow args");
