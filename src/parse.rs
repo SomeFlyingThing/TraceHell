@@ -2,9 +2,9 @@ use std::{env, io, path::PathBuf};
 
 use crate::create::MotherDir;
 
-struct Target {
-    path: PathBuf,
-    command: String,
+pub struct Target {
+    pub path: PathBuf,
+    pub command: String,
 }
 /// create creates the new cpy
 /// switch switches to a existing one
@@ -16,7 +16,7 @@ pub enum Commands {
 }
 
 pub fn parse() -> io::Result<Commands> {
-    let mother_dir = MotherDir::new()?;
+    let mother_dir = MotherDir::create()?;
 
     let args: Vec<String> = env::args().collect();
 

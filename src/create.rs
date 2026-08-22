@@ -1,11 +1,10 @@
 use std::{
     env::home_dir,
-    fs::{self, create_dir},
+    fs::{self},
     io,
     path::PathBuf,
 };
 
-use tempfile::tempdir;
 
 use crate::engine::{FileInfo, FileInfoVecExt};
 
@@ -13,7 +12,7 @@ const FOLDER_NAME: &str = ".TraceHell";
 
 pub struct MotherDir;
 impl MotherDir {
-    pub fn new() -> io::Result<PathBuf> {
+    pub fn create() -> io::Result<PathBuf> {
         let path = MotherDir::create_if_not_present()?;
         Ok(path)
     }
@@ -32,10 +31,10 @@ impl MotherDir {
 }
 
 pub fn create() -> io::Result<String> {
-    let dir_path = MotherDir::new()?;
+    let dir_path = MotherDir::create()?;
 
     let (file, folder_name) = FileInfo::new(&dir_path)?;
-    file.copy_scanfold(&dir_path);
+    file.copy_scanfold(&dir_path)?;
 
     Ok(folder_name)
 }

@@ -1,17 +1,13 @@
 use std::{
-    env,
     fs::{self, File},
     io::{self, Read},
     marker::PhantomData,
     os::unix::fs::MetadataExt,
-    path::{self, Component, Components, Path, PathBuf},
-    process::Command,
-    str::FromStr,
+    path::{Component, Path, PathBuf},
 };
 
 use cargo_metadata::MetadataCommand;
-use proc_macro2::TokenStream;
-use syn::{Expr, parse::Parse, parse_quote, token::Not, visit_mut::VisitMut};
+use syn::{Expr, parse::Parse, parse_quote, visit_mut::VisitMut};
 use walkdir::WalkDir;
 
 pub struct NotSaved;
