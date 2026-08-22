@@ -5,7 +5,11 @@ edition = "2024"
 
 [dependencies]
 cargo_metadata = "0.23.1"
-syn = "3.0.3"
+prettyplease = "0.3.0"
+proc-macro2 = "1.0.107"
+syn = { version = "3.0.3", features = ["full", "visit-mut"] }
+tempfile = "3.27.0"
+walkdir = "2.5.0"
 
 
 [profile.release]
