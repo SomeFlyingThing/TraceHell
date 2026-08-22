@@ -5,7 +5,6 @@ use std::{
     path::PathBuf,
 };
 
-
 use crate::engine::{FileInfo, FileInfoVecExt};
 
 const FOLDER_NAME: &str = ".TraceHell";

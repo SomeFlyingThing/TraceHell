@@ -4,11 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.104"
 cargo_metadata = "0.23.1"
 prettyplease = "0.3.0"
 proc-macro2 = "1.0.107"
+serde = "1.0.229"
 syn = { version = "3.0.3", features = ["full", "visit-mut"] }
 tempfile = "3.27.0"
+toml = "1.1.4"
 walkdir = "2.5.0"
 
 

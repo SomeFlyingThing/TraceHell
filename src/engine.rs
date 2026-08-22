@@ -1,6 +1,6 @@
 use std::{
-    fs::{self, File},
-    io::{self, Read},
+    fs::{self, File, OpenOptions},
+    io::{self, Read, Write},
     marker::PhantomData,
     os::unix::fs::MetadataExt,
     path::{Component, Path, PathBuf},
@@ -143,4 +143,16 @@ impl VisitMut for QuestionMarkFinder {
     }
 }
 
+pub trait Save {
+    fn save(&self) -> io::Result<()>;
+}
 
+impl Save for FileInfo<NotSaved> {
+    fn save(&self) -> io::Result<()> {
+        let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(&self.path)?;
+
+        file.write_all(self.contents.as_bytes())?;
+
+        Ok(())
+    }
+}
