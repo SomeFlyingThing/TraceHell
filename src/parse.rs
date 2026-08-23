@@ -11,7 +11,6 @@ pub struct Target {
 /// run runs with the provided commadn
 pub enum Commands {
     Create(PathBuf),
-    Switch(PathBuf),
     Run(Target),
     Delete(PathBuf),
 }
@@ -50,15 +49,7 @@ pub fn parse() -> io::Result<Commands> {
             }
             Ok(Commands::Run(Target { path, command: command.clone() }))
         },
-        "-switch" => {
-            let name = &args[1];
-            let path = mother_dir.join(name);
-            if !path.exists() {
-                eprintln!("path doesnt exist");
-                return Err(io::Error::new(io::ErrorKind::NotFound, "path doestn exist"));
-            }
-            Ok(Commands::Switch(path))
-        },
+
         "-delete" => {
             let name = &args[1];
             let path = mother_dir.join(name);

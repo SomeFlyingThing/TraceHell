@@ -27,3 +27,22 @@ pub fn check_commad_safety(command: &str) -> Result<(), UnsafeCommand> {
 
     Ok(())
 }
+
+pub fn keep_alive(command: &mut String) {
+    command.push_str("; bash");
+}
+
+#[cfg(test)]
+mod test{
+    use super::*;
+
+    #[test]
+    fn t_keep_alive(){
+        let mut command = String::from("cargo run");
+
+        let result = String::from("cargo run; bash");
+        keep_alive(&mut command);
+
+        assert!(command == result);
+    }
+}
