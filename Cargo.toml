@@ -1,6 +1,6 @@
 [package]
 name = "cargo-tracehell"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2024"
 description = "small tool to help detect logic errors by showing all ? used"
 license = "Apache-2.0"

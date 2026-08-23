@@ -18,9 +18,9 @@ mod safety;
 fn main() -> std::io::Result<()> {
     let args = parse::parse()?;
     let current_folder_name = MotherDir::create()?;
-    let configs = Configs::new()?;
 
     match args {
+        Commands::Help => println!("{}", parse::HELP),
         Commands::Create(path) => {
             let (info, _folder_name) = FileInfo::new(&std::env::current_dir()?)?;
             //copy the non .rs files
@@ -30,6 +30,7 @@ fn main() -> std::io::Result<()> {
         },
         Commands::Run(mut target) => {
             let current_folder_name = current_folder_name.join(target.path);
+            let configs = Configs::new()?;
 
             //safety checks and add ;bash
             check_commad_safety(&target.command)?;

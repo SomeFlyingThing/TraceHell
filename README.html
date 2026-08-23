@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="TraceHell shows where Rust's question-mark operator returns an error.">
+  <title>TraceHell — Follow Rust errors to their source</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d0f;
+      --panel: #13171a;
+      --panel-soft: #101316;
+      --text: #f2efe7;
+      --muted: #a6ada8;
+      --line: #2a302f;
+      --accent: #f4a261;
+      --accent-2: #78c6a3;
+      --code: #090b0c;
+      --max-width: 1080px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 85% 8%, rgba(244, 162, 97, 0.11), transparent 27rem),
+        radial-gradient(circle at 8% 32%, rgba(120, 198, 163, 0.08), transparent 24rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent-2); }
+    a:hover { color: var(--text); }
+
+    .wrap {
+      width: min(calc(100% - 2rem), var(--max-width));
+      margin-inline: auto;
+    }
+
+    header {
+      min-height: 72vh;
+      display: grid;
+      align-items: center;
+      padding: 6rem 0 4rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 1rem;
+      color: var(--accent);
+      font: 700 0.78rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 { line-height: 1.12; }
+
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(3.2rem, 9vw, 7.8rem);
+      letter-spacing: -0.075em;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .lead {
+      max-width: 680px;
+      margin: 1.75rem 0 0;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      margin-top: 2rem;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 0.65rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: transform 150ms ease, border-color 150ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    main { padding: 5rem 0 7rem; }
+
+    section { margin-top: 5.5rem; }
+    section:first-child { margin-top: 0; }
+
+    h2 {
+      margin: 0 0 1.25rem;
+      font-size: clamp(1.9rem, 4vw, 3rem);
+      letter-spacing: -0.035em;
+    }
+
+    h3 {
+      margin-top: 0;
+      font-size: 1.08rem;
+    }
+
+    p { max-width: 760px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      padding: 1.35rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.025), transparent), var(--panel-soft);
+    }
+
+    .number {
+      display: block;
+      margin-bottom: 1.5rem;
+      color: var(--accent);
+      font: 700 0.8rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    pre {
+      margin: 1.25rem 0;
+      padding: 1.2rem 1.35rem;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--code);
+      color: #dce7df;
+      font: 0.9rem/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    code {
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+      background: var(--panel);
+      color: #f5c08f;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    pre code { padding: 0; background: transparent; color: inherit; }
+    .comment { color: #727c77; }
+    .command { color: var(--accent-2); }
+    .output { color: var(--accent); }
+    .trace-marker { color: #d77bff; font-weight: 800; }
+    .trace-location { color: #67d9ff; }
+    .trace-expression { color: #ffd166; }
+    .trace-error { color: #ff6b6b; }
+
+    table {
+      width: 100%;
+      margin-top: 1.5rem;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-soft);
+    }
+
+    th, td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .note {
+      padding: 1.25rem 1.4rem;
+      border-left: 3px solid var(--accent);
+      background: rgba(244, 162, 97, 0.07);
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 2rem 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 760px) {
+      header { min-height: auto; padding-top: 4rem; }
+      .grid { grid-template-columns: 1fr; }
+      table, tbody, tr, td { display: block; }
+      thead { display: none; }
+      td { padding: 0.75rem 1rem; }
+      td:first-child { padding-top: 1.1rem; border-bottom: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="eyebrow">Rust error tracing</p>
+      <h1>Meet every <span>?</span></h1>
+      <p class="lead">
+        TraceHell creates an instrumented copy of a Rust workspace and reports the exact
+        question-mark expression that passes an error back to its caller.
+      </p>
+      <nav aria-label="Page sections">
+        <a class="button" href="#quick-start">Quick start</a>
+        <a class="button" href="#commands">Commands</a>
+        <a class="button" href="#how-it-works">How it works</a>
+        <a class="button" href="https://github.com/SomeFlyingThing/TraceHell">Source code</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="why">
+      <p class="eyebrow">The idea</p>
+      <h2>Errors leave a trail.</h2>
+      <p>
+        Rust's <code>?</code> operator keeps error-handling code concise, but a chain of
+        propagated errors can make the first failing expression harder to spot. TraceHell
+        rewrites those expressions in a separate copy of the workspace so each propagated
+        error prints useful context while the original source stays untouched.
+      </p>
+
+      <pre aria-label="Example TraceHell output"><code><span class="trace-marker">?</span> <span class="trace-location">src/parse.rs:42</span>: <span class="trace-expression">file.read_to_string(&amp;mut contents)</span> -&gt; <span class="trace-error">Os { code: 2, kind: NotFound, ... }</span></code></pre>
+    </section>
+
+    <section id="quick-start">
+      <p class="eyebrow">Setup</p>
+      <h2>Quick start</h2>
+      <p>TraceHell requires Rust with Cargo and one supported terminal: Kitty, Alacritty, or GNOME Terminal.</p>
+
+      <pre><code><span class="comment"># Install from a local checkout</span>
+<span class="command">cargo install --path .</span>
+
+<span class="comment"># From the Rust project you want to inspect</span>
+<span class="command">cargo tracehell create my-trace</span>
+
+<span class="comment"># Run a command inside the instrumented copy</span>
+<span class="command">cargo tracehell run my-trace cargo run</span></code></pre>
+
+      <p class="note">
+        On first use, TraceHell asks which terminal to launch and stores the choice in
+        <code>~/TraceHall_settings</code>. Instrumented copies live under <code>~/.TraceHell</code>.
+      </p>
+    </section>
+
+    <section id="commands">
+      <p class="eyebrow">CLI reference</p>
+      <h2>Four commands, one workflow.</h2>
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>create &lt;name&gt;</code></td>
+            <td>Copies the current Cargo workspace and instruments its Rust source files.</td>
+          </tr>
+          <tr>
+            <td><code>run &lt;name&gt; &lt;command&gt;</code></td>
+            <td>Opens the named copy in the configured terminal and runs the supplied command.</td>
+          </tr>
+          <tr>
+            <td><code>delete &lt;name&gt;</code></td>
+            <td>Removes the named copy from <code>~/.TraceHell</code>.</td>
+          </tr>
+          <tr>
+            <td><code>help</code></td>
+            <td>Prints usage, available commands, examples, and the installed version. The aliases <code>-help</code>, <code>--help</code>, and <code>-h</code> are also accepted.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Every command accepts a bare name, a single dash, or a double dash—for example, <code>run</code>, <code>-run</code>, and <code>--run</code>.</p>
+
+      <pre><code><span class="command">cargo tracehell create parser-debug</span>
+<span class="command">cargo tracehell --run parser-debug cargo test</span>
+<span class="command">cargo tracehell -delete parser-debug</span>
+<span class="command">cargo tracehell help</span></code></pre>
+    </section>
+
+    <section id="how-it-works">
+      <p class="eyebrow">Under the hood</p>
+      <h2>How it works</h2>
+      <div class="grid">
+        <article class="card">
+          <span class="number">01 / COPY</span>
+          <h3>Clone the workspace</h3>
+          <p>Project files are copied into a named directory under <code>~/.TraceHell</code>. Build output and Git metadata are skipped.</p>
+        </article>
+        <article class="card">
+          <span class="number">02 / REWRITE</span>
+          <h3>Instrument each <code>?</code></h3>
+          <p>Rust files are parsed with <code>syn</code>. Try expressions become matches that print context before returning an error.</p>
+        </article>
+        <article class="card">
+          <span class="number">03 / RUN</span>
+          <h3>Launch the trace</h3>
+          <p>The selected terminal opens in the copied workspace and runs the command you supplied, leaving the shell open afterward.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="details">
+      <p class="eyebrow">Details</p>
+      <h2>What gets reported</h2>
+      <p>When an instrumented expression returns <code>Err</code>, TraceHell writes four pieces of context to standard error:</p>
+      <div class="grid">
+        <article class="card"><h3>Source file</h3><p>The path produced by Rust's <code>file!()</code> macro.</p></article>
+        <article class="card"><h3>Line number</h3><p>The location of the generated trace point.</p></article>
+        <article class="card"><h3>Expression and error</h3><p>A colored <code>?</code> marker, the expression as source text, and the error's debug representation.</p></article>
+      </div>
+      <p>
+        Trace names must be a single path component. Before launching a command, the current
+        command filter rejects text containing <code>rm</code>, <code>dd</code>, <code>wipefs</code>, or <code>sudo</code>.
+      </p>
+    </section>
+
+    <section id="development">
+      <p class="eyebrow">Contributing</p>
+      <h2>Build and test</h2>
+      <pre><code><span class="command">cargo build</span>
+<span class="command">cargo test</span>
+<span class="command">cargo fmt --check</span></code></pre>
+      <p>
+        TraceHell is written in Rust 2024 and distributed under the
+        <a href="LICENSE">Apache License 2.0</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">TraceHell · Follow propagated Rust errors back through the code.</div>
+  </footer>
+</body>
+</html>

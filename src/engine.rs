@@ -84,6 +84,22 @@ impl FileInfo<NotSaved> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::parse_contents;
+
+    #[test]
+    fn colors_every_part_of_trace_output() {
+        let mut source = String::from("fn traced() -> Result<(), ()> { Err(())?; Ok(()) }");
+        let output = parse_contents(source.as_mut_str());
+
+        assert!(output.contains("[1;35m?"));
+        assert!(output.contains("[36m{}:{}"));
+        assert!(output.contains("[33m{}"));
+        assert!(output.contains("[31m{:?}"));
+    }
+}
+
 impl FileInfoVecExt for Vec<FileInfo<NotSaved>> {
     fn copy_scanfold(&self, future_dir: &Path) -> io::Result<()> {
         for entry in WalkDir::new(&self[0].root) {
@@ -140,7 +156,7 @@ impl VisitMut for QuestionMarkFinder {
                 Ok(__trace_value) => __trace_value,
                 Err(__trace_error) => {
                     eprintln!(
-                        "{}:{}: {} -> {:?}",
+                        "\x1b[1;35m?\x1b[0m \x1b[36m{}:{}\x1b[0m: \x1b[33m{}\x1b[0m -> \x1b[31m{:?}\x1b[0m",
                         file!(),
                         line!(),
                         stringify!(#inner),
