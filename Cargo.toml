@@ -1,5 +1,5 @@
 [package]
-name = "TraceHell"
+name = "cargo-tracehell"
 version = "0.1.0"
 edition = "2024"
 description = "small tool to help detect logic errors by showing all ? used"
@@ -22,7 +22,7 @@ walkdir = "2.5.0"
 opt-level = 3
 lto = "fat"
 strip = "symbols"
-panic = "unwind"
+panic = "abort"
 
 
 # Security-relevant mistakes
@@ -33,7 +33,7 @@ todo = "warn"
 unimplemented = "warn"
 
 # Maintainability
-large_stack_arrays = "warn"
+large_stack_arrays = "deny"
 large_futures = "warn"
 needless_pass_by_value = "warn"
 redundant_clone = "deny"

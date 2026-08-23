@@ -3,21 +3,6 @@
 version = 4
 
 [[package]]
-name = "TraceHell"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cargo_metadata",
- "prettyplease",
- "proc-macro2",
- "serde",
- "syn",
- "tempfile",
- "toml",
- "walkdir",
-]
-
-[[package]]
 name = "anyhow"
 version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -46,6 +31,21 @@ checksum = "dd0061da739915fae12ea00e16397555ed4371a6bb285431aab930f61b0aa4ba"
 dependencies = [
  "serde",
  "serde_core",
+]
+
+[[package]]
+name = "cargo-tracehell"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cargo_metadata",
+ "prettyplease",
+ "proc-macro2",
+ "serde",
+ "syn",
+ "tempfile",
+ "toml",
+ "walkdir",
 ]
 
 [[package]]
