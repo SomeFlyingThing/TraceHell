@@ -30,7 +30,7 @@ impl FileInfo<NotSaved> {
 
         let project_root = metadata.workspace_root.as_std_path();
 
-        let mut files = Vec::new();
+        let mut files = Vec::with_capacity(15);
 
         for entry in WalkDir::new(project_root) {
             let entry = entry?;

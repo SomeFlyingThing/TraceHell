@@ -24,7 +24,10 @@ lto = "fat"
 strip = "symbols"
 panic = "abort"
 
-
+[profile.perf]
+inherits  = "release"
+debug =1
+strip = "none"
 # Security-relevant mistakes
 mem_forget = "deny"
 exit = "warn"

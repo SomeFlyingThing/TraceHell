@@ -1,9 +1,5 @@
 use std::{
-    env::home_dir,
-    fs::{File, OpenOptions},
-    io::{self, Read, Write, stdin},
-    path::{Path, PathBuf},
-    process::Command,
+    env::home_dir, fs::{File, OpenOptions}, io::{self, Read, Write, stdin}, os::unix::fs::MetadataExt, path::{Path, PathBuf}, process::Command,
 };
 
 use serde::{Deserialize, Serialize};
@@ -83,7 +79,7 @@ fn get_settings_path() -> PathBuf {
         B: Kitty,\n
         C: GnomeTerminal,"
         );
-        let mut answer = String::new();
+        let mut answer = String::with_capacity(2);
         stdin().read_line(&mut answer).expect("unable to read input");
         let settings = loop {
             match answer.trim().to_lowercase().as_str() {
@@ -109,7 +105,8 @@ impl Configs {
     pub fn new() -> io::Result<Self> {
         let mut file = File::open(get_settings_path())?;
 
-        let mut contetnts = String::new();
+        let mut size = file.metadata()?.size() as usize;
+        let mut contetnts = String::with_capacity(size);
 
         file.read_to_string(&mut contetnts)?;
 
