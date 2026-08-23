@@ -2,6 +2,9 @@
 name = "TraceHell"
 version = "0.1.0"
 edition = "2024"
+description = "small tool to help detect logic errors by showing all ? used"
+licence = "Apache-2.0"
+repository = "https://github.com/SomeFlyingThing/TraceHell.git"
 
 [dependencies]
 anyhow = "1.0.104"
