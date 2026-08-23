@@ -66,7 +66,7 @@ impl Save for Configs {
 
         let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(path)?;
 
-        file.write_all(&text.as_bytes())?;
+        file.write_all(text.as_bytes())?;
         Ok(())
     }
 }
