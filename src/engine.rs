@@ -7,7 +7,7 @@ use std::{
 };
 
 use cargo_metadata::MetadataCommand;
-use syn::{Expr, parse::Parse, parse_quote, visit_mut::VisitMut};
+use syn::{Expr, parse_quote, visit_mut::VisitMut};
 use walkdir::WalkDir;
 
 pub struct NotSaved;
@@ -25,16 +25,27 @@ pub struct FileInfo<State> {
 
 impl FileInfo<NotSaved> {
     pub fn new(path: &Path) -> io::Result<(Vec<Self>, String)> {
-        let metadata = MetadataCommand::new().manifest_path(path).exec().unwrap();
+        let manifest_path = if path.is_dir() { path.join("Cargo.toml") } else { path.to_path_buf() };
+        let metadata = MetadataCommand::new().manifest_path(manifest_path).exec().unwrap();
 
-        let project_root = metadata.workspace_root.as_std_path().parent().unwrap();
+        let project_root = metadata.workspace_root.as_std_path();
 
         let mut files = Vec::new();
 
-        for package in metadata.workspace_packages() {
-            let path = PathBuf::from(&package.manifest_path);
+        for entry in WalkDir::new(project_root) {
+            let entry = entry?;
+            let path = entry.path();
 
-            let mut file = File::open(&path)?;
+            if path
+                .components()
+                .any(|component| component.as_os_str() == "target" || component.as_os_str() == ".git")
+                || !path.is_file()
+                || path.extension().is_none_or(|extension| extension != "rs")
+            {
+                continue;
+            }
+
+            let mut file = File::open(path)?;
             let size = file.metadata()?.size();
 
             let mut contents = String::with_capacity(size as usize);
@@ -150,6 +161,17 @@ pub trait Save {
 impl Save for FileInfo<NotSaved> {
     fn save(&self) -> io::Result<()> {
         let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(&self.path)?;
+
+        file.write_all(self.contents.as_bytes())?;
+
+        Ok(())
+    }
+}
+
+impl FileInfo<NotSaved> {
+    pub fn save_to(&self, directory: &Path) -> io::Result<()> {
+        let path = directory.join(&self.path);
+        let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(path)?;
 
         file.write_all(self.contents.as_bytes())?;
 

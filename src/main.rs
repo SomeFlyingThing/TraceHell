@@ -1,13 +1,10 @@
-use std::{ error::Error, fs, os::unix::process::CommandExt, process::Command};
+use std::fs;
 
 use crate::{
-    configs::{Configs, Terminals},
+    configs::Configs,
     create::MotherDir,
     engine::{FileInfo, FileInfoVecExt, Save},
-    parse::{
-        Commands,
-        Commands::{Create, Run},
-    },
+    parse::Commands,
     safety::{check_commad_safety, keep_alive},
 };
 
@@ -24,11 +21,12 @@ fn main() -> std::io::Result<()> {
     let configs = Configs::new()?;
 
     match args {
-        Commands::Create(_path) => {
-            let (info, folder_name) = FileInfo::new(&current_folder_name)?;
+        Commands::Create(path) => {
+            let (info, _folder_name) = FileInfo::new(&std::env::current_dir()?)?;
             //copy the non .rs files
-            info.copy_scanfold(&current_folder_name.join(folder_name))?;
-            info.iter().for_each(|info| info.save().expect("error"));
+            info.copy_scanfold(&path)?;
+            info.iter().for_each(|info| info.save_to(&path).expect("error"));
+            println!("{} was created", path.file_name().unwrap().display());
         },
         Commands::Run(mut target) => {
             let current_folder_name = current_folder_name.join(target.path);
@@ -37,20 +35,12 @@ fn main() -> std::io::Result<()> {
             check_commad_safety(&target.command)?;
             keep_alive(&mut target.command);
 
-            Command::new(configs.terminal.to_string())
-                .arg("--directory")
-                .arg(" ") //space
-                .arg(current_folder_name)
-                .arg("bash")
-                .arg("-lc")
-                .arg(target.command)
-                .spawn()?;
+            configs.terminal.command(&current_folder_name, &target.command).spawn()?;
         },
         Commands::Delete(path) => {
             fs::remove_dir_all(&path)?;
             println!("{} was removed", path.file_name().unwrap().display());
         },
-        _ => todo!(),
     }
 
     Ok(())

@@ -1,7 +1,6 @@
 use std::io;
 
-use syn::Error;
-
+#[derive(Debug)]
 pub enum UnsafeCommand {
     Rm,
     DiskWrite,
@@ -9,7 +8,7 @@ pub enum UnsafeCommand {
 }
 
 impl From<UnsafeCommand> for std::io::Error {
-    fn from(value: UnsafeCommand) -> Self {
+    fn from(_value: UnsafeCommand) -> Self {
         io::Error::new(io::ErrorKind::PermissionDenied, "unsafe operation detected")
     }
 }
